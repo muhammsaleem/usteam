@@ -35,23 +35,18 @@ pipeline {
             steps {
                 sh '''
                 sudo yum install -y python3 python3-pip
-                # Upgrade pip and install Checkov
                 python3 -m pip install --upgrade pip
-                python3 -m pip install checkov --quiet
-                # Add Checkov to PATH
-                export PATH=$PATH:$(python3 -m site --user-base)/bin
-                # Verify Checkov installation
-                checkov --version || echo "Checkov installation failed"
+                python3 -m pip install --user checkov --quiet
+                CHECKOV_PATH=$(python3 -m site --user-base)/bin
+                $CHECKOV_PATH/checkov --version || echo "Checkov installation failed"
                 '''
             }
         }
-       stage('Infrastructure Security Scan') {
+        stage('Checkov Scan') {
             steps {
                 sh '''
-                    # Ensure correct PATH for Checkov command
-                    export PATH=$PATH:$(python3 -m site --user-base)/bin
-                    # Run Checkov scan on the repository
-                    checkov -d . --output cli || true
+                CHECKOV_PATH=$(python3 -m site --user-base)/bin
+                $CHECKOV_PATH/checkov -d . --output cli --soft-fail
                 '''
             }
         }
